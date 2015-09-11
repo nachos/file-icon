@@ -1,0 +1,50 @@
+{
+  "name": "file-icon",
+  "version": "0.1.0",
+  "description": "Retrieve an icon from a file",
+  "main": "lib\\index.js",
+  "scripts": {
+    "lint": "gulp lint",
+    "test": "gulp test",
+    "coveralls": "gulp coveralls",
+	  "install": "native-builder build"
+  },
+  "pre-commit": [
+    "lint"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nachos/file-icon.git"
+  },
+  "keywords": [
+    "file",
+    "icon",
+    "addon",
+    "native"
+  ],
+  "author": "Nachos team",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nachos/file-icon/issues"
+  },
+  "homepage": "https://github.com/nachos/file-icon",
+  "devDependencies": {
+    "git-validate": "^2.0.3",
+    "gulp": "^3.9.0",
+    "gulp-bump": "^0.3.1",
+    "gulp-coveralls": "^0.1.4",
+    "gulp-istanbul": "^0.10.0",
+    "gulp-jscs": "^2.0.0",
+    "gulp-jshint": "^1.11.2",
+    "gulp-mocha": "^2.1.3",
+    "jshint-stylish": "^2.0.1",
+    "lazypipe": "^1.0.1",
+    "run-sequence": "^1.1.2"
+  },
+  "dependencies": {
+    "bindings": "^1.2.1",
+    "chai": "^3.2.0",
+    "nan": "^2.0.9",
+    "native-builder": "^1.0.1"
+  }
+}
