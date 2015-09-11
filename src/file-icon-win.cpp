@@ -8,13 +8,20 @@ using Nan::GetFunction;
 using Nan::New;
 using Nan::Set;
 
-NAN_METHOD(Test) {
+NAN_METHOD(Get) {
+  const char* path = "C:\\Windows\\System32\\calc.exe";
+  SHFILEINFO s_sfi;
+
+  ::SHGetFileInfo(path, FILE_ATTRIBUTE_NORMAL, &s_sfi, sizeof(s_sfi),
+      SHGFI_ICON | SHGFI_USEFILEATTRIBUTES | SHGFI_SMALLICON);
+  ICONINFO stIconInfo;
+  GetIconInfo(s_sfi.hIcon, &stIconInfo);
   info.GetReturnValue().Set(5);
 }
 
 NAN_MODULE_INIT(InitAll) {
-  Set(target, New<String>("test").ToLocalChecked(),
-    GetFunction(New<FunctionTemplate>(Test)).ToLocalChecked());
+  Set(target, New<String>("get").ToLocalChecked(),
+    GetFunction(New<FunctionTemplate>(Get)).ToLocalChecked());
 }
 
 NODE_MODULE(fileIcon, InitAll)

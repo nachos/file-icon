@@ -8,7 +8,15 @@ describe('file-icon', function () {
 
   describe('exports', function () {
     it('should expose api', function () {
-      expect(fileIcon.test).to.be.a('function');
+      expect(fileIcon.get).to.be.a('function');
+    });
+  });
+
+  describe('asd', function () {
+    it('asd', function () {
+      var x = fileIcon.get();
+
+      console.log(x);
     });
   });
 });
