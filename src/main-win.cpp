@@ -2,6 +2,8 @@
 #include <gdiplus.h>
 #include <shlwapi.h>
 
+#include "file-icon.h"
+
 using namespace Gdiplus;
 
 #pragma comment (lib,"Gdiplus.lib")
@@ -98,9 +100,14 @@ NAN_METHOD(Get) {
   info.GetReturnValue().Set(NewBuffer(streamData, bytesSaved).ToLocalChecked());
 }
 
+
+NAN_METHOD(Test) {
+  info.GetReturnValue().Set(5);
+}
+
 void Init(Handle<Object> exports, Handle<Object> module) {
   Set(module, New<String>("exports").ToLocalChecked(),
-      GetFunction(New<FunctionTemplate>(Get)).ToLocalChecked());
+      GetFunction(New<FunctionTemplate>(Test)).ToLocalChecked());
 }
 
 NODE_MODULE(fileIcon, Init)
