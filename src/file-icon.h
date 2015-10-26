@@ -3,20 +3,21 @@
 
 #include <nan.h>
 
-using Nan::ObjectWrap;
+using v8::String;
 
-class FileIcon : public ObjectWrap {
+class FileIcon : public Nan::ObjectWrap {
  public:
-  static void Init(v8::Local<v8::Object> exports);
+  static NAN_MODULE_INIT(Init);
 
  private:
-  explicit FileIcon(double value = 0);
+  explicit FileIcon(String::Utf8Value path);
   ~FileIcon();
 
-  static void New(const v8::FunctionCallbackInfo<v8::Value>& args);
-  static void PlusOne(const v8::FunctionCallbackInfo<v8::Value>& args);
-  static v8::Persistent<v8::Function> constructor;
-  double value_;
+  static NAN_METHOD(New);
+//  static NAN_METHOD(GetIcon);
+//  static NAN_METHOD(GetAllIcons);
+  static Nan::Persistent<v8::Function> constructor;
+  String::Utf8Value _path;
 };
 
 #endif

@@ -85,7 +85,7 @@ char * IStreamToByteArray(IStream* pStream, ULONG* bytesSaved) {
 
 NAN_METHOD(Get) {
   String::Utf8Value filePathV8(info[0]->ToString());
-  const char* filePath = std::string(*filePathV8).c_str();
+  const char* filePath = *filePathV8;
 
   SHFILEINFO s_sfi;
 
@@ -100,14 +100,4 @@ NAN_METHOD(Get) {
   info.GetReturnValue().Set(NewBuffer(streamData, bytesSaved).ToLocalChecked());
 }
 
-
-NAN_METHOD(Test) {
-  info.GetReturnValue().Set(5);
-}
-
-void Init(Handle<Object> exports, Handle<Object> module) {
-  Set(module, New<String>("exports").ToLocalChecked(),
-      GetFunction(New<FunctionTemplate>(Test)).ToLocalChecked());
-}
-
-NODE_MODULE(fileIcon, Init)
+NODE_MODULE(fileIcon, FileIcon::Init)

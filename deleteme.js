@@ -6,4 +6,11 @@ var fileIcon = require('./lib');
 //
 //fs.writeFileSync('diablo.png', diablo);
 
-console.log(fileIcon());
+
+var obj = new fileIcon.FileIcon(5);
+
+//console.log(obj.getValue());
+//console.log(obj.plusOne());
+//console.log(obj.getValue());
+
+console.log(obj);
