@@ -1,78 +1,75 @@
 #include "file-icon.h"
 
-FileIcon::FileIcon(String::Utf8Value path) : _path(path) {
-//  IntPtr hModule = IntPtr.Zero;
-//  try
-//  {
-//      hModule = NativeMethods.LoadLibraryEx(fileName, IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
-//      if (hModule == IntPtr.Zero)
-//          throw new Win32Exception();
-//
-//      // Enumerate the icon resource and build .ico files in memory.
-//
-//      var tmpData = new List<byte[]>();
-//
-//      ENUMRESNAMEPROC callback = (h, t, name, l) =>
-//      {
-//          // Refer to the following URL for the data structures used here:
-//          // http://msdn.microsoft.com/en-us/library/ms997538.aspx
-//
-//          // RT_GROUP_ICON resource consists of a GRPICONDIR and GRPICONDIRENTRY's.
-//
-//          var dir = GetDataFromResource(hModule, RT_GROUP_ICON, name);
-//
-//          // Calculate the size of an entire .icon file.
-//
-//          int count = BitConverter.ToUInt16(dir, 4);  // GRPICONDIR.idCount
-//          int len = 6 + 16 * count;                   // sizeof(ICONDIR) + sizeof(ICONDIRENTRY) * count
-//          for (int i = 0; i < count; ++i)
-//              len += BitConverter.ToInt32(dir, 6 + 14 * i + 8);   // GRPICONDIRENTRY.dwBytesInRes
-//
-//          using (var dst = new BinaryWriter(new MemoryStream(len)))
-//          {
-//              // Copy GRPICONDIR to ICONDIR.
-//
-//              dst.Write(dir, 0, 6);
-//
-//              int picOffset = 6 + 16 * count; // sizeof(ICONDIR) + sizeof(ICONDIRENTRY) * count
-//
-//              for (int i = 0; i < count; ++i)
-//              {
-//                  // Load the picture.
-//
-//                  ushort id = BitConverter.ToUInt16(dir, 6 + 14 * i + 12);    // GRPICONDIRENTRY.nID
-//                  var pic = GetDataFromResource(hModule, RT_ICON, (IntPtr)id);
-//
-//                  // Copy GRPICONDIRENTRY to ICONDIRENTRY.
-//
-//                  dst.Seek(6 + 16 * i, SeekOrigin.Begin);
-//
-//                  dst.Write(dir, 6 + 14 * i, 8);  // First 8bytes are identical.
-//                  dst.Write(pic.Length);          // ICONDIRENTRY.dwBytesInRes
-//                  dst.Write(picOffset);           // ICONDIRENTRY.dwImageOffset
-//
-//                  // Copy a picture.
-//
-//                  dst.Seek(picOffset, SeekOrigin.Begin);
-//                  dst.Write(pic, 0, pic.Length);
-//
-//                  picOffset += pic.Length;
-//              }
-//
-//              tmpData.Add(((MemoryStream)dst.BaseStream).ToArray());
-//          }
-//
-//          return true;
-//      };
-//      NativeMethods.EnumResourceNames(hModule, RT_GROUP_ICON, callback, IntPtr.Zero);
-//
-//      iconData = tmpData.ToArray();
-//  }
-//  finally
-//  {
-//      if (hModule != IntPtr.Zero)
-//          NativeMethods.FreeLibrary(hModule);
-//  }
+#include <iostream>
+#include <fstream>
+
+char * GetDataFromResource(HMODULE hModule, LPCTSTR type, LPTSTR name) {
+  HRSRC hResInfo = FindResource(hModule, name, type);
+
+  if (hResInfo == NULL) {
+    // TODO: exception
+  }
+
+  HGLOBAL hResData = LoadResource(hModule, hResInfo);
+
+  if (hResData == NULL) {
+    // TODO: exception
+  }
+  LPVOID pResData = LockResource(hResData);
+
+  if (pResData == NULL) {
+    // TODO: exception
+  }
+
+  unsigned int size = SizeofResource(hModule, hResInfo);
+
+  if (size == 0) {
+    // TODO: exception
+  }
+
+  char * buffer;
+
+  memcpy (buffer, pResData, size);
+
+  return buffer;
+}
+
+BOOL CALLBACK EnumResNameProc(HMODULE hModule, LPCTSTR lpszType, LPTSTR lpszName, LONG_PTR lParam) {
+  std::list<std::string> *names = (std::list<std::string>*)lParam;
+  names->push_back(lpszName);
+  return TRUE;
+}
+
+
+FileIcon::FileIcon(std::string path) : _path(path) {
+  HMODULE hModule = NULL;
+
+  hModule = LoadLibraryEx(_path.c_str(), NULL, LOAD_LIBRARY_AS_DATAFILE);
+
+  if (hModule == NULL) {
+  // TODO: exception here
+//        Nan::ErrnoException(GetLastError());
+      return;
+  }
+
+  std::list<std::string> names;
+
+  BOOL success = EnumResourceNames(hModule, RT_GROUP_ICON, EnumResNameProc, (LONG_PTR)&names);
+
+  for (std::list<std::string>::iterator it=_names.begin(); it != _names.end(); ++it) {
+      char* iconGroupData = GetDataFromResource(hModule, RT_GROUP_ICON, *it);
+
+      GRPICONDIR hola = iconGroupData;
+      hola.idCount;
+  }
+
+  if(!success) {
+    // TODO: throw something
+  }
+
+  if (hModule != NULL) {
+    FreeLibrary(hModule);
+  }
 }
 
 FileIcon::~FileIcon() {
@@ -85,35 +82,42 @@ NAN_MODULE_INIT(FileIcon::Init) {
   tpl->SetClassName(Nan::New("FileIcon").ToLocalChecked());
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
-//  SetPrototypeMethod(tpl, "getValue", FileIcon::GetValue);
-//  SetPrototypeMethod(tpl, "plusOne", FileIcon::PlusOne);
+  SetPrototypeMethod(tpl, "getAllIcons", FileIcon::GetAllIcons);
 
-  constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
+  constructor.Reset(Nan::GetFunction(tpl).ToLocalChecked());
   Nan::Set(target, Nan::New("FileIcon").ToLocalChecked(),
     Nan::GetFunction(tpl).ToLocalChecked());
 }
 
 NAN_METHOD(FileIcon::New) {
   if (info.IsConstructCall()) {
-    v8::String::Utf8Value filePathV8(info[0]->ToString());
-    FileIcon *obj = new FileIcon(filePathV8);
+    if (info.Length() < 1 || !info[0]->IsString())
+    {
+        Nan::ThrowTypeError("path must be a string");
+        return;
+    }
+    FileIcon *obj = new FileIcon(*v8::String::Utf8Value(info[0]->ToString()));
     obj->Wrap(info.This());
     info.GetReturnValue().Set(info.This());
   } else {
     const int argc = 1;
     v8::Local<v8::Value> argv[argc] = {info[0]};
-    v8::Local<v8::Function> cons = Nan::New(constructor());
+    v8::Local<v8::Function> cons = Nan::New(constructor);
     info.GetReturnValue().Set(cons->NewInstance(argc, argv));
   }
 }
-//
-//NAN_METHOD(FileIcon::PlusOne) {
-//  FileIcon* obj = Nan::ObjectWrap::Unwrap<FileIcon>(info.This());
-//  obj->value_ += 1;
-//  info.GetReturnValue().Set(obj->value_);
-//}
-//
-//NAN_METHOD(FileIcon::GetValue) {
-//  FileIcon* obj = Nan::ObjectWrap::Unwrap<FileIcon>(info.This());
-//  info.GetReturnValue().Set(obj->value_);
-//}
+
+NAN_METHOD(FileIcon::GetAllIcons) {
+  FileIcon* obj = Nan::ObjectWrap::Unwrap<FileIcon>(info.This());
+
+  v8::Local<v8::Array> returnValue = Nan::New<v8::Array>();
+
+    int i = 0;
+    for (std::list<std::string>::iterator it=obj->_names.begin(); it != obj->_names.end(); ++it) {
+        returnValue->Set(i, Nan::New((*it).c_str()).ToLocalChecked());
+        i++;
+    }
+
+  info.GetReturnValue().Set(returnValue);
+//  info.GetReturnValue().Set(Nan::New(obj->_names).ToLocalChecked());
+}
